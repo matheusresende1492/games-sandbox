@@ -3,31 +3,21 @@
 #include <vector>
 
 double lastUpdateTime = 0;
-int cellSize = 25;
-int cellCount = 30;
+const int cellSize = 25;
+const int cellCount = 30;
 
 bool eventTrigerred(double interval);
-
-std::vector<Vector2> GetPieceBody(int pieceType) {
-	switch (pieceType) {
-				case 1:
-					return {Vector2{2, 6}, Vector2{3, 6}, Vector2{4, 6}, Vector2{2, 7}};
-				case 2:
-					return {Vector2{10, 5}, Vector2{11, 5}, Vector2{12, 5}, Vector2{13, 5}};
-				default:
-					return {};
-	}
-}
 
 class Piece {
 	public:
 		std::vector<Vector2> body;
+		Color color;
 
-		Piece(int format) {
-			body = GetPieceBody(format);	
+		Piece() {
+			this->GeneratePiece();
 		}
 
-		void Draw(Color color) {
+		void Draw() {
 			for(unsigned int i = 0; i < body.size(); i++) {
 				float x = body[i].x;	
 				float y = body[i].y;
@@ -40,10 +30,6 @@ class Piece {
 			this->MovePieceDownards();
 		}
 
-		int GetRandomPieceFormat() {
-			return GetRandomValue(1, 2);
-		}
-
 		void MovePieceDownards() {
 			for(unsigned int i = 0; i < body.size(); i++) {
 				body[i].y++;
@@ -51,31 +37,146 @@ class Piece {
 		}
 
 		void MovePieceToTheRight() {
-			for(unsigned int i = 0; i < body.size(); i++) {	
-				body[i].x++;
+			if (this->CheckPossibleRightMovement()) {
+				for(unsigned int i = 0; i < body.size(); i++) {	
+					body[i].x++;
+				}
 			}
 		}
 
 		void MovePieceToTheLeft() {
-			for(unsigned int i = 0; i < body.size(); i++) {	
-				body[i].x--;
+			if (this->CheckPossibleLeftMovement()) {
+				for(unsigned int i = 0; i < body.size(); i++) {	
+					body[i].x--;
+				}
 			}
 		}
-
-		void TryMoveToTheLeft() {
+		
+		bool CheckPossibleLeftMovement() {
 			for(unsigned int i = 0; i < body.size(); i++) {	
         		if (body[i].x - 1 < 0){
-					this->MovePieceToTheLeft();
+					return false;
 				}
         	}
+			return true;
 		}
 
-		void TryMoveToTheRight() {
+		bool CheckPossibleRightMovement() {
 			for(unsigned int i = 0; i < body.size(); i++) {	
         		if (body[i].x + 1 >= cellCount){
-					this->MovePieceToTheRight();
+					return false;
 				}
         	}
+			return true;
+		}
+
+		void GeneratePiece() {
+			int pieceType =  GetRandomValue(1, 7);
+			switch (pieceType) {
+				case 1: {
+					this->color = PINK;
+					float starting_x = GetRandomValue(0, cellCount - 3);
+					this->body = { 
+						Vector2{starting_x, -2}, 
+						Vector2{starting_x + 1, -2}, 
+						Vector2{starting_x + 2, -2}, 
+						Vector2{starting_x, -1}
+					};
+					break;
+				}
+				case 2: {
+					this->color = RED;
+					float starting_x = GetRandomValue(0, cellCount - 4);
+					this->body = { 
+						Vector2{starting_x, -1}, 
+						Vector2{starting_x + 1, -1}, 
+						Vector2{starting_x + 2, -1}, 
+						Vector2{starting_x + 3, -1}
+					};
+					break;
+				}
+				case 3: {
+					this->color = ORANGE;
+					float starting_x = GetRandomValue(0, cellCount - 3);
+					this->body = { 
+						Vector2{starting_x, -2}, 
+						Vector2{starting_x + 1, -2}, 
+						Vector2{starting_x + 1, -1}, 
+						Vector2{starting_x + 2, -2}
+					};
+					break;
+				}
+				case 4: {
+					this->color = GREEN;
+					float starting_x = GetRandomValue(0, cellCount - 3);
+					this->body = { 
+						Vector2{starting_x, -1}, 
+						Vector2{starting_x + 1, -1}, 
+						Vector2{starting_x + 1, -2}, 
+						Vector2{starting_x + 2, -2}
+					};
+					break;
+				}
+				case 5: {
+					this->color = BLUE;
+					float starting_x = GetRandomValue(0, cellCount - 3);
+					this->body = { 
+						Vector2{starting_x, -2}, 
+						Vector2{starting_x + 1, -1}, 
+						Vector2{starting_x + 1, -2}, 
+						Vector2{starting_x + 2, -1}
+					};
+					break;
+				}
+				case 6: {
+					this->color = YELLOW;
+					float starting_x = GetRandomValue(0, cellCount - 2);
+					this->body = { 
+						Vector2{starting_x, -1}, 
+						Vector2{starting_x, -2}, 
+						Vector2{starting_x + 1, -1}, 
+						Vector2{starting_x + 1, -2}
+					};
+					break;
+				}
+				case 7: {
+					this->color = WHITE;
+					float starting_x = GetRandomValue(0, cellCount - 3);
+					this->body = { 
+						Vector2{starting_x, -2}, 
+						Vector2{starting_x + 1, -2}, 
+						Vector2{starting_x + 2, -1}, 
+						Vector2{starting_x + 2, -2}
+					};
+					break;
+				}
+				default:
+					//throw error, invalid piece!
+					break;
+			}
+		}
+};
+
+class Game {
+	public:
+		Piece piece = Piece();
+		bool game_matrix[][cellCount];
+
+		Game() {
+		}
+
+		~Game() {}
+
+		void Update() {
+			piece.Update();
+		}
+
+		void Draw() {
+			piece.Draw();
+		}
+
+		void CheckPieceColisionWithGameMatrix() {
+
 		}
 };
 
@@ -84,50 +185,28 @@ int main() {
 	std::cout << "Starting TETRIS game..." << "\n";
 
 	InitWindow(cellSize * cellCount, cellSize * cellCount, "TETRIS");
-	SetTargetFPS(100);
+	SetTargetFPS(15);
 
-	Piece piece1 = Piece(1);
-	Piece piece2 = Piece(2);
+	Game game = Game();
 
 	while(WindowShouldClose() == false) {
 		BeginDrawing();
 		
-		if (eventTrigerred(0.2)) {
-			piece1.Update();
-			piece2.Update();
+		if (eventTrigerred(0.8)) {
+			game.Update();
 		}	
 
-		bool moved = false;
-
-		if (IsKeyPressed(KEY_RIGHT)) {
-			piece1.TryMoveToTheRight();
-			moved = true;
+		if (IsKeyPressed(KEY_RIGHT) || IsKeyDown(KEY_RIGHT)) {
+			game.piece.MovePieceToTheRight();
 		}
 
-		if (IsKeyPressed(KEY_LEFT)) {
-			piece1.TryMoveToTheLeft();
-			moved = true;
+		if (IsKeyPressed(KEY_LEFT) || IsKeyDown(KEY_LEFT)) {
+			game.piece.MovePieceToTheLeft();
 		}
 
-		if (eventTrigerred(0.2)) {
-			if (IsKeyDown(KEY_RIGHT) && !moved) {
-				piece1.TryMoveToTheRight();
-			}
-		
-			if (IsKeyDown(KEY_LEFT) && !moved) {
-				piece1.TryMoveToTheLeft();
-			}
-		
-			lastUpdateTime = GetTime();
-		}
-		
+		game.Draw();
 
-
-		piece1.Draw(BLACK);
-		piece2.Draw(RED);
-
-
-		ClearBackground(GRAY);
+		ClearBackground(BLACK);
 
 		EndDrawing();
 	}
