@@ -5,16 +5,33 @@
 double lastUpdateTime = 0;
 const int cellSize = 25;
 const int cellCount = 30;
+const int screenWidth = cellSize * cellCount;
+const int screenHeight = cellSize * cellCount;
 
+struct matrix_tile {
+	bool on;
+	Color color;
+};
+
+matrix_tile game_matrix[cellCount][cellCount];
+
+void rotacionate(std::vector<Vector2>& body, bool clockwise); 
 bool eventTrigerred(double interval);
 
 class Piece {
 	public:
 		std::vector<Vector2> body;
 		Color color;
+		//add enum of piece type
 
 		Piece() {
-			this->GeneratePiece();
+			GeneratePiece();
+		}
+
+		~Piece(){}
+
+		void rotate(bool clockwise) {
+			rotacionate(body, clockwise);	
 		}
 
 		void Draw() {
@@ -27,7 +44,7 @@ class Piece {
 		}
 
 		void Update() {
-			this->MovePieceDownards();
+			MovePieceDownards();
 		}
 
 		void MovePieceDownards() {
@@ -36,16 +53,16 @@ class Piece {
 			}
 		}
 
-		void MovePieceToTheRight() {
-			if (this->CheckPossibleRightMovement()) {
+		void MoveToTheRight() {
+			if (CheckPossibleRightMovement()) {
 				for(unsigned int i = 0; i < body.size(); i++) {	
 					body[i].x++;
 				}
 			}
 		}
 
-		void MovePieceToTheLeft() {
-			if (this->CheckPossibleLeftMovement()) {
+		void MoveToTheLeft() {
+			if (CheckPossibleLeftMovement()) {
 				for(unsigned int i = 0; i < body.size(); i++) {	
 					body[i].x--;
 				}
@@ -54,7 +71,7 @@ class Piece {
 		
 		bool CheckPossibleLeftMovement() {
 			for(unsigned int i = 0; i < body.size(); i++) {	
-        		if (body[i].x - 1 < 0){
+        		if (body[i].x - 1 < 0 || game_matrix[(int)body[i].x - 1][(int)body[i].y].on){
 					return false;
 				}
         	}
@@ -63,7 +80,7 @@ class Piece {
 
 		bool CheckPossibleRightMovement() {
 			for(unsigned int i = 0; i < body.size(); i++) {	
-        		if (body[i].x + 1 >= cellCount){
+        		if (body[i].x + 1 >= cellCount || game_matrix[(int)body[i].x + 1][(int)body[i].y].on){
 					return false;
 				}
         	}
@@ -159,24 +176,106 @@ class Piece {
 
 class Game {
 	public:
+		bool running = true;
 		Piece piece = Piece();
-		bool game_matrix[][cellCount];
 
 		Game() {
+			InitializeGameMatrix();
 		}
 
 		~Game() {}
 
 		void Update() {
-			piece.Update();
+			if (running) {
+				if (CheckPieceColision()) {
+					TransferPieceToGameMatrix(piece);
+					piece = Piece();
+				} else {
+					piece.Update();
+				}
+			}
 		}
 
 		void Draw() {
 			piece.Draw();
+			DrawMatrix();
+		}
+		
+		void TransferPieceToGameMatrix(Piece piece) {
+			for(unsigned int i = 0; i < piece.body.size(); i++) {	
+				game_matrix[(int)piece.body[i].x][(int)piece.body[i].y].on = true;
+				game_matrix[(int)piece.body[i].x][(int)piece.body[i].y].color = piece.color;
+        	}
 		}
 
-		void CheckPieceColisionWithGameMatrix() {
+		bool CheckPieceColisionWithFloor() {
+			for(unsigned int i = 0; i < piece.body.size(); i++) {	
+        		if (piece.body[i].y + 1 >= cellCount){
+					return true;
+				}
+        	}
+			return false;
+		}
 
+		bool CheckPieceColision() {
+			return CheckPieceColisionWithFloor() || CheckColisionWithGameMatrix();
+		}
+
+		bool CheckColisionWithGameMatrix() {
+			for(unsigned int i = 0; i < piece.body.size(); i++) {
+				if (game_matrix[(int)piece.body[i].x][(int)piece.body[i].y + 1].on) {
+					return true;	
+				}
+			}	
+			return false;
+		}
+
+		void DrawBackgrond() {
+			ClearBackground(BLACK);
+
+			// Draw vertical lines
+			for (int x = 0; x <= screenWidth; x += cellSize) {
+				DrawLine(x, 0, x, screenHeight, LIGHTGRAY);
+			}
+
+			// Draw horizontal lines
+			for (int y = 0; y <= screenHeight; y += cellSize) {
+				DrawLine(0, y, screenWidth, y, LIGHTGRAY);
+			}
+		}
+		
+		void InitializeGameMatrix() {
+			for(unsigned int i = 0; i < cellCount; i++) {
+				for(unsigned int j = 0; j < cellCount; j++) {
+					game_matrix[i][j].on = false;
+					game_matrix[i][j].color = BLACK;
+				}
+			}
+		}
+
+		void DrawMatrix() {
+			for(unsigned int i = 0; i < cellCount; i++) {
+				for(unsigned int j = 0; j < cellCount; j++) {
+					if (game_matrix[i][j].on) {
+						float x = i;	
+						float y = j;	
+
+						DrawRectangle(x * cellSize, y * cellSize, cellSize, cellSize, game_matrix[i][j].color);
+					}	
+				}
+			}	
+		}
+
+		void MovePieceToTheLeft() {
+			if(!CheckPieceColision()) {
+				piece.MoveToTheLeft();
+			}
+		}
+
+		void MovePieceToTheRight() {
+			if(!CheckPieceColision()) {
+				piece.MoveToTheRight();
+			}
 		}
 };
 
@@ -185,11 +284,11 @@ int main() {
 	std::cout << "Starting TETRIS game..." << "\n";
 
 	InitWindow(cellSize * cellCount, cellSize * cellCount, "TETRIS");
-	SetTargetFPS(15);
+	SetTargetFPS(20);
 
 	Game game = Game();
 
-	while(WindowShouldClose() == false) {
+	while(!WindowShouldClose()) {
 		BeginDrawing();
 		
 		if (eventTrigerred(0.8)) {
@@ -197,16 +296,27 @@ int main() {
 		}	
 
 		if (IsKeyPressed(KEY_RIGHT) || IsKeyDown(KEY_RIGHT)) {
-			game.piece.MovePieceToTheRight();
+			game.MovePieceToTheRight();
 		}
 
 		if (IsKeyPressed(KEY_LEFT) || IsKeyDown(KEY_LEFT)) {
-			game.piece.MovePieceToTheLeft();
+			game.MovePieceToTheLeft();
+		}
+
+		if (IsKeyPressed(KEY_UP)) {
+			game.piece.rotate(false);
+		}
+
+		if (IsKeyPressed(KEY_DOWN)) {
+			game.piece.rotate(true);
+		}
+
+		if (IsKeyPressed(KEY_SPACE) || IsKeyDown(KEY_SPACE)) {
+			game.Update();
 		}
 
 		game.Draw();
-
-		ClearBackground(BLACK);
+		game.DrawBackgrond();
 
 		EndDrawing();
 	}
@@ -223,3 +333,17 @@ bool eventTrigerred(double interval) {
 	}
 	return false;
 }	
+
+void rotacionate(std::vector<Vector2>& body, bool clockwise) {
+	Vector2 pivot = body[2];
+	for(unsigned int i = 0; i < body.size(); i++) {
+		float x = body[i].x - pivot.x;
+		float y = body[i].y - pivot.y;
+
+		float rotatedX = clockwise ? y : -y;
+		float rotatedY = clockwise ? -x : x;
+
+		body[i].x = pivot.x + rotatedX;
+		body[i].y = pivot.y + rotatedY;
+	}
+}
