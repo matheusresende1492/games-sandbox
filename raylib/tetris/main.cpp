@@ -4,16 +4,20 @@
 
 double lastUpdateTime = 0;
 const int cellSize = 25;
-const int cellCount = 30;
-const int screenWidth = cellSize * cellCount;
-const int screenHeight = cellSize * cellCount;
+const int widthCellCount = 15;
+const int heightCellCount = 30;
+const int playableWidth = widthCellCount * cellSize;
+const int playableHeigth = heightCellCount * cellSize;
+const int offset = 75;
+const int screenWidth = 3 * offset + cellSize * widthCellCount;
+const int screenHeight = cellSize * heightCellCount;
 
 struct matrix_tile {
 	bool on;
 	Color color;
 };
 
-matrix_tile game_matrix[cellCount][cellCount];
+matrix_tile game_matrix[widthCellCount][heightCellCount];
 
 void rotacionate(std::vector<Vector2>& body, bool clockwise); 
 bool eventTrigerred(double interval);
@@ -36,10 +40,12 @@ class Piece {
 
 		void Draw() {
 			for(unsigned int i = 0; i < body.size(); i++) {
-				float x = body[i].x;	
-				float y = body[i].y;
+				if (body[i].y >= (int)(offset/cellSize)) {
+					float x = body[i].x;	
+					float y = body[i].y;
 
-				DrawRectangle(x * cellSize, y * cellSize, cellSize, cellSize, color);
+					DrawRectangle(x * cellSize, y * cellSize, cellSize, cellSize, color);
+				}	
 			}
 		}
 
@@ -71,7 +77,7 @@ class Piece {
 		
 		bool CheckPossibleLeftMovement() {
 			for(unsigned int i = 0; i < body.size(); i++) {	
-        		if (body[i].x - 1 < 0 || game_matrix[(int)body[i].x - 1][(int)body[i].y].on){
+        		if ((body[i].x - 1) * cellSize < offset || game_matrix[(int)body[i].x - 1][(int)body[i].y].on){
 					return false;
 				}
         	}
@@ -80,7 +86,7 @@ class Piece {
 
 		bool CheckPossibleRightMovement() {
 			for(unsigned int i = 0; i < body.size(); i++) {	
-        		if (body[i].x + 1 >= cellCount || game_matrix[(int)body[i].x + 1][(int)body[i].y].on){
+        		if (body[i].x + 1 >= widthCellCount || game_matrix[(int)body[i].x + 1][(int)body[i].y].on){
 					return false;
 				}
         	}
@@ -89,81 +95,82 @@ class Piece {
 
 		void GeneratePiece() {
 			int pieceType =  GetRandomValue(1, 7);
+			int relative_y_0 = (int)(offset/cellSize);
 			switch (pieceType) {
 				case 1: {
 					this->color = PINK;
-					float starting_x = GetRandomValue(0, cellCount - 3);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 3);
 					this->body = { 
-						Vector2{starting_x, -2}, 
-						Vector2{starting_x + 1, -2}, 
-						Vector2{starting_x + 2, -2}, 
-						Vector2{starting_x, -1}
+						Vector2{starting_x, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 2, (float) relative_y_0 - 2}, 
+						Vector2{starting_x, (float) relative_y_0 -1}
 					};
 					break;
 				}
 				case 2: {
 					this->color = RED;
-					float starting_x = GetRandomValue(0, cellCount - 4);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 4);
 					this->body = { 
-						Vector2{starting_x, -1}, 
-						Vector2{starting_x + 1, -1}, 
-						Vector2{starting_x + 2, -1}, 
-						Vector2{starting_x + 3, -1}
+						Vector2{starting_x, (float) relative_y_0 -1}, 
+						Vector2{starting_x + 1, (float) relative_y_0 -1}, 
+						Vector2{starting_x + 2, (float) relative_y_0 -1}, 
+						Vector2{starting_x + 3, (float) relative_y_0 -1}
 					};
 					break;
 				}
 				case 3: {
 					this->color = ORANGE;
-					float starting_x = GetRandomValue(0, cellCount - 3);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 3);
 					this->body = { 
-						Vector2{starting_x, -2}, 
-						Vector2{starting_x + 1, -2}, 
-						Vector2{starting_x + 1, -1}, 
-						Vector2{starting_x + 2, -2}
+						Vector2{starting_x, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 1}, 
+						Vector2{starting_x + 2, (float) relative_y_0 - 2}
 					};
 					break;
 				}
 				case 4: {
 					this->color = GREEN;
-					float starting_x = GetRandomValue(0, cellCount - 3);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 3);
 					this->body = { 
-						Vector2{starting_x, -1}, 
-						Vector2{starting_x + 1, -1}, 
-						Vector2{starting_x + 1, -2}, 
-						Vector2{starting_x + 2, -2}
+						Vector2{starting_x, (float) relative_y_0 -1}, 
+						Vector2{starting_x + 1, (float) relative_y_0 -1}, 
+						Vector2{starting_x + 1, (float) relative_y_0 -2}, 
+						Vector2{starting_x + 2, (float) relative_y_0 -2}
 					};
 					break;
 				}
 				case 5: {
 					this->color = BLUE;
-					float starting_x = GetRandomValue(0, cellCount - 3);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 3);
 					this->body = { 
-						Vector2{starting_x, -2}, 
-						Vector2{starting_x + 1, -1}, 
-						Vector2{starting_x + 1, -2}, 
-						Vector2{starting_x + 2, -1}
+						Vector2{starting_x, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 1}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 2, (float) relative_y_0 - 1}
 					};
 					break;
 				}
 				case 6: {
 					this->color = YELLOW;
-					float starting_x = GetRandomValue(0, cellCount - 2);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 2);
 					this->body = { 
-						Vector2{starting_x, -1}, 
-						Vector2{starting_x, -2}, 
-						Vector2{starting_x + 1, -1}, 
-						Vector2{starting_x + 1, -2}
+						Vector2{starting_x, (float) relative_y_0 - 1}, 
+						Vector2{starting_x, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 1}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 2}
 					};
 					break;
 				}
 				case 7: {
 					this->color = WHITE;
-					float starting_x = GetRandomValue(0, cellCount - 3);
+					float starting_x = GetRandomValue(offset/cellSize, widthCellCount - 3);
 					this->body = { 
-						Vector2{starting_x, -2}, 
-						Vector2{starting_x + 1, -2}, 
-						Vector2{starting_x + 2, -1}, 
-						Vector2{starting_x + 2, -2}
+						Vector2{starting_x, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 1, (float) relative_y_0 - 2}, 
+						Vector2{starting_x + 2, (float) relative_y_0 - 1}, 
+						Vector2{starting_x + 2, (float) relative_y_0 - 2}
 					};
 					break;
 				}
@@ -187,7 +194,7 @@ class Game {
 
 		void Update() {
 			if (running) {
-				if (CheckPieceColision()) {
+				if (CheckPieceColisionX()) {
 					TransferPieceToGameMatrix(piece);
 					piece = Piece();
 				} else {
@@ -208,45 +215,45 @@ class Game {
         	}
 		}
 
-		bool CheckPieceColisionWithFloor() {
-			for(unsigned int i = 0; i < piece.body.size(); i++) {	
-        		if (piece.body[i].y + 1 >= cellCount){
+		bool CheckPieceColisionX() {
+			for(unsigned int i = 0; i < piece.body.size(); i++) {
+				int x = (int)piece.body[i].x;
+				int y = (int)piece.body[i].y;
+				if (y < 0) {
+					return false;
+				}
+				if(CheckPieceColisionWithFloor(y) || CheckColisionWithGameMatrix(x, y)) {
 					return true;
 				}
-        	}
+			}
 			return false;
 		}
 
-		bool CheckPieceColision() {
-			return CheckPieceColisionWithFloor() || CheckColisionWithGameMatrix();
+		bool CheckPieceColisionWithFloor(int piece_y) {
+    		return piece_y + 1 >= heightCellCount;
 		}
 
-		bool CheckColisionWithGameMatrix() {
-			for(unsigned int i = 0; i < piece.body.size(); i++) {
-				if (game_matrix[(int)piece.body[i].x][(int)piece.body[i].y + 1].on) {
-					return true;	
-				}
-			}	
-			return false;
+		bool CheckColisionWithGameMatrix(int piece_x, int piece_y) {
+			return game_matrix[piece_x][piece_y + 1].on;
 		}
 
 		void DrawBackgrond() {
 			ClearBackground(BLACK);
 
 			// Draw vertical lines
-			for (int x = 0; x <= screenWidth; x += cellSize) {
-				DrawLine(x, 0, x, screenHeight, LIGHTGRAY);
+			for (int x = 0 + offset; x <= widthCellCount * cellSize; x += cellSize) {
+				DrawLine(x, 0 + offset, x, heightCellCount * cellSize, LIGHTGRAY);
 			}
 
 			// Draw horizontal lines
-			for (int y = 0; y <= screenHeight; y += cellSize) {
-				DrawLine(0, y, screenWidth, y, LIGHTGRAY);
+			for (int y = 0 + offset; y <=  heightCellCount * cellSize; y += cellSize) {
+				DrawLine(0 + offset, y, widthCellCount * cellSize, y, LIGHTGRAY);
 			}
 		}
 		
 		void InitializeGameMatrix() {
-			for(unsigned int i = 0; i < cellCount; i++) {
-				for(unsigned int j = 0; j < cellCount; j++) {
+			for(unsigned int i = 0; i < widthCellCount; i++) {
+				for(unsigned int j = 0; j < heightCellCount; j++) {
 					game_matrix[i][j].on = false;
 					game_matrix[i][j].color = BLACK;
 				}
@@ -254,8 +261,8 @@ class Game {
 		}
 
 		void DrawMatrix() {
-			for(unsigned int i = 0; i < cellCount; i++) {
-				for(unsigned int j = 0; j < cellCount; j++) {
+			for(unsigned int i = 0; i < widthCellCount; i++) {
+				for(unsigned int j = 0; j < heightCellCount; j++) {
 					if (game_matrix[i][j].on) {
 						float x = i;	
 						float y = j;	
@@ -267,13 +274,13 @@ class Game {
 		}
 
 		void MovePieceToTheLeft() {
-			if(!CheckPieceColision()) {
+			if(!CheckPieceColisionX()) {
 				piece.MoveToTheLeft();
 			}
 		}
 
 		void MovePieceToTheRight() {
-			if(!CheckPieceColision()) {
+			if(!CheckPieceColisionX()) {
 				piece.MoveToTheRight();
 			}
 		}
@@ -283,7 +290,7 @@ int main() {
 	
 	std::cout << "Starting TETRIS game..." << "\n";
 
-	InitWindow(cellSize * cellCount, cellSize * cellCount, "TETRIS");
+	InitWindow(screenWidth, screenHeight, "Tetris");
 	SetTargetFPS(20);
 
 	Game game = Game();
@@ -317,6 +324,8 @@ int main() {
 
 		game.Draw();
 		game.DrawBackgrond();
+
+		DrawText("Tetris Game", offset, 20, 40, WHITE);
 
 		EndDrawing();
 	}
