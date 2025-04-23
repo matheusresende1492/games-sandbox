@@ -2,6 +2,15 @@
 #include <raylib.h>
 #include <vector>
 
+/*
+ * TODO refact code and functions (organize better methods and classes)
+ * TODO refact outOfBounds methods
+ * TODO remove tetris line if completed 
+ * TODO gameover function if X out of bounds
+ * TODO next piece
+ * TODO score
+ * */
+
 double lastUpdateTime = 0;
 const int cellSize = 25;
 const int widthCellCount = 15;
@@ -344,7 +353,10 @@ bool eventTrigerred(double interval) {
 }	
 
 void rotacionate(std::vector<Vector2>& body, bool clockwise) {
+	bool outOfBounds = false;
 	Vector2 pivot = body[2];
+	std::vector<Vector2> rotatedBody;
+	rotatedBody.resize(body.size());
 	for(unsigned int i = 0; i < body.size(); i++) {
 		float x = body[i].x - pivot.x;
 		float y = body[i].y - pivot.y;
@@ -352,7 +364,12 @@ void rotacionate(std::vector<Vector2>& body, bool clockwise) {
 		float rotatedX = clockwise ? y : -y;
 		float rotatedY = clockwise ? -x : x;
 
-		body[i].x = pivot.x + rotatedX;
-		body[i].y = pivot.y + rotatedY;
+		//TODO check out of bounds
+		rotatedBody[i].x = pivot.x + rotatedX;
+		rotatedBody[i].y = pivot.y + rotatedY;
+	}
+	
+	if (!outOfBounds) {
+		body = rotatedBody;
 	}
 }
